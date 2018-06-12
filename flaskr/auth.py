@@ -31,11 +31,12 @@ def register():
                 'INSERT INTO user (username, password) VALUES (?, ?)',
                 (username, generate_password_hash(password))
             )
-            db.commit()
+            db.commit()  # 在数据库中保存更改
+            # 转到login界面
             return redirect(url_for('auth.login'))
 
         flash(error)
-
+    # POST方法，转向register界面
     return render_template('auth/register.html')
 
 
@@ -46,22 +47,23 @@ def login():
         password = request.form['password']
         db = get_db()
         error = None
+        # 从数据库抓取用户信息
         user = db.execute(
             'SELECT * FROM user WHERE username = ?', (username,)
         ).fetchone()
 
-        if user is None:
-            error = 'Incorrect username.'
-        elif not check_password_hash(user['password'], password):
-            error = 'Incorrect password.'
+        # 用户不存在或者密码错误，记录error
+        if user is None or not check_password_hash(user['password'], password):
+            error = 'Incorrect username or incorrect password.'
 
+        # 无错误，把目前的session设置为用户session，转向主页面
         if error is None:
             session.clear()
             session['user_id'] = user['id']
             return redirect(url_for('index'))
 
         flash(error)
-
+    # GET方法，转向login界面
     return render_template('auth/login.html')
 
 
